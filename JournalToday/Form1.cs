@@ -21,6 +21,7 @@ namespace JournalToday
         public formMain()
         {
             InitializeComponent();
+            this.KeyPreview = true;
 
             try
             {
@@ -81,6 +82,27 @@ namespace JournalToday
         private void toolStripStatusLabel1_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start("https://github.com/aeshirey/JournalToday");
+        }
+
+        private void formMain_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData == Keys.F11)
+            {
+                if (this.FormBorderStyle == System.Windows.Forms.FormBorderStyle.None)
+                {
+                    // un-fullscreen
+                    this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+                    this.TopMost = false;
+                    this.WindowState = FormWindowState.Normal;
+                }
+                else
+                {
+                    // make fullscreen
+                    this.WindowState = FormWindowState.Maximized;
+                    this.TopMost = true;
+                    this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                }
+            }
         }
     }
 }
