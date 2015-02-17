@@ -80,7 +80,7 @@ namespace JournalToday
 
         private void toolStripStatusLabel1_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("http://dingostick.com");
+            System.Diagnostics.Process.Start("https://github.com/aeshirey/JournalToday");
         }
     }
 }
