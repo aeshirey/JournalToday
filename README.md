@@ -8,4 +8,4 @@ Journal Today is a very simple, very lightweight journaling application. The goa
 
 JournalToday encourages daily journaling by strictly limiting your ability to create/edit journal entries to **today only**. You cannot create future journals or revise previous days.
 
-[](http://dev.dingostick.com/jt1.png)
+![JT Screenshot](http://dev.dingostick.com/jt1.png)
