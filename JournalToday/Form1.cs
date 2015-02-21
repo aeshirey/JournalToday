@@ -13,26 +13,14 @@ namespace JournalToday
 {
     public partial class formMain : Form
     {
-        private const string JOURNAL_DB = "journalToday.sqlite";
-        private SQLiteConnection dbConnection;
-        
-        private Func<DateTime, UInt32> formatDate = date => Convert.ToUInt32(date.Year * 10000 + date.Month * 100 + date.Day);
-
         public formMain()
         {
             InitializeComponent();
-            this.KeyPreview = true;
+            this.KeyPreview = true; // permits F11 check
 
-            try
+            if (!JT.LoadDatabase())
             {
-                dbConnection = new SQLiteConnection(JOURNAL_DB);
-
-                if (!System.IO.File.Exists(JOURNAL_DB))
-                    dbConnection.CreateTable<JournalEntry>();
-            }
-            catch
-            {
-                MessageBox.Show("Unable to open or create journal database file '" + JOURNAL_DB + "'");
+                MessageBox.Show("Unable to open or create journal database file '" + JT.JOURNAL_DB + "'");
 
                 dateTimePicker1.Enabled = false;
                 tbJournalText.Enabled = false;
@@ -48,7 +36,7 @@ namespace JournalToday
         {
             var selectedDate = ((DateTimePicker)sender).Value.Date;
 
-            var journalEntry = dbConnection.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate == formatDate(selectedDate));
+            var journalEntry = JT.db.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate == JT.formatDate(selectedDate));
             tbJournalText.Text = journalEntry == null ? string.Empty : journalEntry.JournalText;
 
 
@@ -61,16 +49,15 @@ namespace JournalToday
 
             var journalEntry = new JournalEntry()
             {
-                JournalDate = formatDate(DateTime.Now),
+                JournalDate = JT.formatDate(DateTime.Now),
                 JournalText = tbJournalText.Text
             };
-            dbConnection.InsertOrReplace(journalEntry);
+            JT.db.InsertOrReplace(journalEntry);
         }
 
         private void formMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            dbConnection.Commit();
-            dbConnection.Close();
+            JT.CloseDatabase();
         }
 
         private void tbJournalText_TextChanged(object sender, EventArgs e)
@@ -104,5 +91,7 @@ namespace JournalToday
                 }
             }
         }
+
+
     }
 }
