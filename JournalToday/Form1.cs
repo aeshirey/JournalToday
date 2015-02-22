@@ -21,20 +21,19 @@ namespace JournalToday
             try
             {
                 JT.LoadDatabase();
-                LoadEntry(DateTime.Now);
             }
             catch (DllNotFoundException e)
             {
                 MessageBox.Show("Couldn't load sqlite3.dll. Please ensure this file exists in the same directory as Flambe.exe.");
                 dateTimePicker1.Enabled = false;
                 tbJournalText.Enabled = false;
+                return;
             }
-            catch
-            {
-                MessageBox.Show("Unable to open or create journal database file '" + JT.JOURNAL_DB + "'");
-                dateTimePicker1.Enabled = false;
-                tbJournalText.Enabled = false;
-            }
+
+            LoadEntry(DateTime.Now);
+
+            var streakLength = JT.CurrentStreak();
+            statusLabelCurrentStreak.Text = streakLength == 1 ? "Current streak: 1 day" : "Current streak: " + streakLength.ToString() + " days";
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace JournalToday
 
             var entry = new JournalEntry
             {
-                JournalDate = JT.formatDate(DateTime.Now),
+                JournalDate = DateTime.Now.Date, // using .Date aligns records to midnight and thus ensures only record/day
                 JournalText = tbJournalText.Text
             };
 
@@ -115,10 +114,11 @@ namespace JournalToday
 
         private void LoadEntry(DateTime date)
         {
-            var journalEntry = JT.db.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate == JT.formatDate(date));
+            var journalEntry = JT.db.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate.Date == date.Date);
             tbJournalText.Text = journalEntry == null ? string.Empty : journalEntry.JournalText;
 
             tbJournalText.Enabled = date.Date == DateTime.Now.Date;
+            tbJournalText.SelectionStart = tbJournalText.Text.Length;
         }
     }
 }

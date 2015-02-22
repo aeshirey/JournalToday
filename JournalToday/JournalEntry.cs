@@ -10,7 +10,7 @@ namespace JournalToday
     public class JournalEntry
     {
         [PrimaryKey]
-        public UInt32 JournalDate { get; set; }
+        public DateTime JournalDate { get; set; }
 
         public string JournalText { get; set; }
     }

@@ -16,7 +16,7 @@ namespace JournalToday
         {
             try
             {
-                db = new SQLiteConnection(JOURNAL_DB);
+                db = new SQLiteConnection(JOURNAL_DB, storeDateTimeAsTicks: true);
                 db.CreateTable<JournalEntry>();
             }
             catch (Exception e)
@@ -35,12 +35,52 @@ namespace JournalToday
             }
         }
 
-        public static int LongestStreak()
+
+        private static IEnumerable<IList<JournalEntry>> GetAllStreaks()
         {
-            throw new NotImplementedException("LongestStreak");
+            var entries = db.Table<JournalEntry>().OrderByDescending(je => je.JournalDate);
+            var streak = new List<JournalEntry>();
+            
+            JournalEntry previous = null;
+            foreach (var entry in entries)
+            {
+                if (previous == null || previous.JournalDate - entry.JournalDate == TimeSpan.FromDays(1))
+                {
+                    streak.Add(entry);
+                }
+                else
+                {
+                    yield return streak;
+                    streak = new List<JournalEntry>();
+                }
+
+                previous = entry;
+            }
+
+            if (streak.Count > 0)
+                yield return streak;
         }
 
-        public static Func<DateTime, UInt32> formatDate = date => Convert.ToUInt32(date.Year * 10000 + date.Month * 100 + date.Day);
+        public static int LongestStreak()
+        {
+            return GetAllStreaks().Max(streak => streak.Count);
+        }
+
+        public static int CurrentStreak()
+        {            
+            IList<JournalEntry> mostRecentStreak = GetAllStreaks().FirstOrDefault();
+
+            var today = DateTime.Now.Date;
+            var yesterday = today.AddDays(-1);
+
+            if (mostRecentStreak != null 
+                && mostRecentStreak.Any(entry => entry.JournalDate == today || entry.JournalDate == yesterday))
+            {
+                return mostRecentStreak.Count;
+            }
+
+            return 0;
+        }
 
     }
 }
