@@ -12,26 +12,27 @@ namespace JournalToday
         public static SQLiteConnection db;
         public const string JOURNAL_DB = "journalToday.sqlite";
 
-        public static bool LoadDatabase()
+        public static void LoadDatabase()
         {
             try
             {
                 db = new SQLiteConnection(JOURNAL_DB);
-
-                if (!System.IO.File.Exists(JOURNAL_DB))
-                    db.CreateTable<JournalEntry>();
-                return true;
+                db.CreateTable<JournalEntry>();
             }
-            catch
+            catch (Exception e)
             {
-                return false;
+                db = null;
+                throw e;
             }
         }
 
         public static void CloseDatabase()
         {
-            db.Commit();
-            db.Close();
+            if (db != null)
+            {
+                db.Commit();
+                db.Close();
+            }
         }
 
         public static int LongestStreak()

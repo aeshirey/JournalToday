@@ -18,10 +18,20 @@ namespace JournalToday
             InitializeComponent();
             this.KeyPreview = true; // permits F11 check
 
-            if (!JT.LoadDatabase())
+            try
+            {
+                JT.LoadDatabase();
+                LoadEntry(DateTime.Now);
+            }
+            catch (DllNotFoundException e)
+            {
+                MessageBox.Show("Couldn't load sqlite3.dll. Please ensure this file exists in the same directory as Flambe.exe.");
+                dateTimePicker1.Enabled = false;
+                tbJournalText.Enabled = false;
+            }
+            catch
             {
                 MessageBox.Show("Unable to open or create journal database file '" + JT.JOURNAL_DB + "'");
-
                 dateTimePicker1.Enabled = false;
                 tbJournalText.Enabled = false;
             }
@@ -35,28 +45,17 @@ namespace JournalToday
         private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
         {
             var selectedDate = ((DateTimePicker)sender).Value.Date;
-
-            var journalEntry = JT.db.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate == JT.formatDate(selectedDate));
-            tbJournalText.Text = journalEntry == null ? string.Empty : journalEntry.JournalText;
-
-
-            tbJournalText.Enabled = selectedDate == DateTime.Now.Date;
+            LoadEntry(selectedDate);
         }
 
         private void tbJournalText_Leave(object sender, EventArgs e)
         {
-            var text = ((TextBox)sender).Text;
-
-            var journalEntry = new JournalEntry()
-            {
-                JournalDate = JT.formatDate(DateTime.Now),
-                JournalText = tbJournalText.Text
-            };
-            JT.db.InsertOrReplace(journalEntry);
+            SaveEntry();
         }
 
         private void formMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            SaveEntry();
             JT.CloseDatabase();
         }
 
@@ -71,6 +70,11 @@ namespace JournalToday
             System.Diagnostics.Process.Start("https://github.com/aeshirey/JournalToday");
         }
 
+        /// <summary>
+        /// Handle keypresses such as F11
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void formMain_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyData == Keys.F11)
@@ -92,6 +96,29 @@ namespace JournalToday
             }
         }
 
+        /// <summary>
+        /// Saves the entry for today in the database
+        /// </summary>
+        private void SaveEntry()
+        {
+            if (!tbJournalText.Enabled)
+                return;
 
+            var entry = new JournalEntry
+            {
+                JournalDate = JT.formatDate(DateTime.Now),
+                JournalText = tbJournalText.Text
+            };
+
+            JT.db.InsertOrReplace(entry);
+        }
+
+        private void LoadEntry(DateTime date)
+        {
+            var journalEntry = JT.db.Table<JournalEntry>().FirstOrDefault(je => je.JournalDate == JT.formatDate(date));
+            tbJournalText.Text = journalEntry == null ? string.Empty : journalEntry.JournalText;
+
+            tbJournalText.Enabled = date.Date == DateTime.Now.Date;
+        }
     }
 }
